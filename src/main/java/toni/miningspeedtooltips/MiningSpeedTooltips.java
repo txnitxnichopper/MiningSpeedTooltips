@@ -2,6 +2,7 @@ package toni.miningspeedtooltips;
 
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
@@ -34,6 +35,11 @@ import net.neoforged.fml.ModContainer;
 #if mc >= 211
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.component.Tool;
+#else
+import net.minecraft.world.item.DiggerItem;
+import toni.lib.utils.PlatformUtils;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 #endif
 
 
@@ -97,7 +103,23 @@ public class MiningSpeedTooltips #if FABRIC implements ModInitializer, ClientMod
     }
     #else
     public String getTooltip(ItemStack itemStack) {
-        Material material = itemStack.getItem().getDefaultAttributeModifiers(itemStack);
+        if (PlatformUtils.isModLoaded("quark"))
+        {
+            if (!Screen.hasShiftDown()) {
+                return null;
+            }
+        }
+
+        if (itemStack.getItem() instanceof DiggerItem item) {
+            var speed = item.getTier().getSpeed();
+            var level = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_EFFICIENCY, itemStack);
+            if (level > 0)
+                speed += (float)(level * level + 1);
+
+            return " " + DecimalFormat.getInstance().format(speed) + " Mining Speed";
+        }
+
+        return null;
     }
     #endif
 
